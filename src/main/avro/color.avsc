@@ -1,0 +1,7 @@
+{"namespace": "ak.kafka.stream.avro",
+ "type": "record",
+ "name": "Color",
+ "fields": [
+     {"name": "name", "type": "string"}
+ ]
+}

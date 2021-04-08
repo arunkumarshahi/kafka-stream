@@ -1,0 +1,9 @@
+syntax = "proto3";
+package ak.kafka.stream.avro;
+option java_outer_classname = "MovieProtos";
+
+message Movie {
+  int64   movie_id = 1;
+  string  title = 2;
+  int32   release_year = 3;
+}
