@@ -11,6 +11,9 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
 import ak.kafka.stream.avro.Movie;
 import ak.kafka.stream.avro.MovieProtos;
@@ -43,64 +46,66 @@ import static org.apache.kafka.common.serialization.Serdes.Long;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
 @Slf4j
+@Component
 public class StreamSerilization {
-
-	protected Properties buildStreamsProperties(Properties envProps) {
+	@Autowired
+	private Environment envProps;
+	protected Properties buildStreamsProperties(Environment envProps2) {
 		Properties props = new Properties();
 
-		props.put(StreamsConfig.APPLICATION_ID_CONFIG, envProps.getProperty("application.id"));
-		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, envProps.getProperty("bootstrap.servers"));
+		props.put(StreamsConfig.APPLICATION_ID_CONFIG, envProps2.getProperty("application.id"));
+		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, envProps2.getProperty("bootstrap.servers"));
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, String().getClass());
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass());
-//		props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG,
-//				envProps.getProperty("schema.registry.url"));
+		props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG,
+				envProps2.getProperty("schema.registry.url"));
 
 		return props;
 	}
 
-	private void createTopics(Properties envProps) {
+	private void createTopics(Environment envProps2) {
 		Map<String, Object> config = new HashMap<>();
-		log.info("envProps = {}", envProps);
-		config.put("bootstrap.servers", envProps.getProperty("bootstrap.servers"));
+		log.info("envProps = {}", envProps2);
+		config.put("bootstrap.servers", envProps2.getProperty("bootstrap.servers"));
 		AdminClient client = AdminClient.create(config);
 
 		List<NewTopic> topics = new ArrayList<>();
 
-		topics.add(new NewTopic(envProps.getProperty("input.avro.movies.topic.name"),
-				parseInt(envProps.getProperty("input.avro.movies.topic.partitions")),
-				parseShort(envProps.getProperty("input.avro.movies.topic.replication.factor"))));
+		topics.add(new NewTopic(envProps2.getProperty("input.avro.movies.topic.name"),
+				parseInt(envProps2.getProperty("input.avro.movies.topic.partitions")),
+				parseShort(envProps2.getProperty("input.avro.movies.topic.replication.factor"))));
 
-		topics.add(new NewTopic(envProps.getProperty("output.proto.movies.topic.name"),
-				parseInt(envProps.getProperty("output.proto.movies.topic.partitions")),
-				parseShort(envProps.getProperty("output.proto.movies.topic.replication.factor"))));
+		topics.add(new NewTopic(envProps2.getProperty("output.proto.movies.topic.name"),
+				parseInt(envProps2.getProperty("output.proto.movies.topic.partitions")),
+				parseShort(envProps2.getProperty("output.proto.movies.topic.replication.factor"))));
 
 		client.createTopics(topics);
 		client.close();
 	}
 
-	protected SpecificAvroSerde<Movie> movieAvroSerde(Properties envProps) {
+	protected SpecificAvroSerde<Movie> movieAvroSerde(Environment envProps2) {
 		SpecificAvroSerde<Movie> movieAvroSerde = new SpecificAvroSerde<>();
 
 		Map<String, String> serdeConfig = new HashMap<>();
-		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps.getProperty("schema.registry.url"));
+		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps2.getProperty("schema.registry.url"));
 		movieAvroSerde.configure(serdeConfig, false);
 		return movieAvroSerde;
 	}
 
-	protected KafkaProtobufSerde<MovieProtos.Movie> movieProtobufSerde(Properties envProps) {
+	protected KafkaProtobufSerde<MovieProtos.Movie> movieProtobufSerde(Environment envProps2) {
 		final KafkaProtobufSerde<MovieProtos.Movie> protobufSerde = new KafkaProtobufSerde<>();
 
 		Map<String, String> serdeConfig = new HashMap<>();
-		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps.getProperty("schema.registry.url"));
+		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps2.getProperty("schema.registry.url"));
 		protobufSerde.configure(serdeConfig, false);
 		return protobufSerde;
 	}
 
-	protected Topology buildTopology(Properties envProps, final SpecificAvroSerde<Movie> movieSpecificAvroSerde,
+	protected Topology buildTopology(Environment envProps2, final SpecificAvroSerde<Movie> movieSpecificAvroSerde,
 			final KafkaProtobufSerde<MovieProtos.Movie> movieProtoSerde) {
 
-		final String inputAvroTopicName = envProps.getProperty("input.avro.movies.topic.name");
-		final String outProtoTopicName = envProps.getProperty("output.proto.movies.topic.name");
+		final String inputAvroTopicName = envProps2.getProperty("input.avro.movies.topic.name");
+		final String outProtoTopicName = envProps2.getProperty("output.proto.movies.topic.name");
 
 		final StreamsBuilder builder = new StreamsBuilder();
 
@@ -134,7 +139,7 @@ public class StreamSerilization {
 
 	protected void runTutorial(String configPath) throws IOException {
         log.info("runTutorial invoked in stream runner");
-		Properties envProps = this.loadEnvProperties(configPath);
+		//Properties envProps = this.loadEnvProperties(configPath);
 		Properties streamProps = this.buildStreamsProperties(envProps);
 		log.info("envProps invoked in stream runner :: {}",envProps);
 		log.info("streamProps invoked in stream runner :: {}",streamProps);

@@ -20,6 +20,7 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
@@ -46,6 +47,8 @@ import static org.apache.kafka.streams.StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_C
 @Slf4j
 //@EnableKafkaStreams
 public class StreamRunner implements ApplicationRunner {
+	@Autowired
+	private  StreamSerilization streamSerilization;
 //	private final static String inputTopic = "inputTopic";
 //	private final static String bootstrapServers = "localhost:9092";
 //
@@ -53,7 +56,7 @@ public class StreamRunner implements ApplicationRunner {
 	public void run(ApplicationArguments arg0) throws Exception {
 		//transformBasicStream();
 		log.info("StreamRunner is invoked ");
-		 new StreamSerilization().runTutorial("C:\\Users\\KUMARARUN\\Documents\\workspace-spring-tool-suite-4-4.6.0.RELEASE\\KafkaStream\\src\\main\\resources\\application.properties");
+		streamSerilization.runTutorial("C:\\DockerTutorial\\spring\\kafka-stream\\src\\main\\resources\\application.properties");
 		//transformNestedObjectStream(StreamsBuilder builder);
 }
 //	private void transformNestedObjectStream() {

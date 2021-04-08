@@ -28,69 +28,69 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 class TopologyTestDriverAvroApplicationTests {
 
-	  private static final String SCHEMA_REGISTRY_SCOPE = TopologyTestDriverAvroApplicationTests.class.getName();
-	  private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
-
-	  private TopologyTestDriver testDriver;
-
-	  private TestInputTopic<String, User> usersTopic;
-	  private TestOutputTopic<String, Color> colorsTopic;
-
-	  @BeforeEach
-	  void beforeEach() throws Exception {
-	    // Create topology to handle stream of users
-	    StreamsBuilder builder = new StreamsBuilder();
-	    new KafkaStreamApplication().handleStream(builder);
-	    Topology topology = builder.build();
-
-	    // Dummy properties needed for test diver
-	    Properties props = new Properties();
-	    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
-	    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-	    props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, StringSerde.class);
-	    props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde.class);
-	    props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_SCHEMA_REGISTRY_URL);
-
-	    // Create test driver
-	    TopologyTestDriver testDriver = new TopologyTestDriver(topology, props);
-
-	    // Create Serdes used for test record keys and values
-	    Serde<String> stringSerde = Serdes.String();
-	    Serde<User> avroUserSerde = new SpecificAvroSerde<>();
-	    Serde<Color> avroColorSerde = new SpecificAvroSerde<>();
-
-	    // Configure Serdes to use the same mock schema registry URL
-//	    Map<String, String> config = Map.of(
-//	        AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_SCHEMA_REGISTRY_URL);
-	    Map<String, String> serdeConfig = new HashMap<>();
-	    serdeConfig.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_SCHEMA_REGISTRY_URL);
-	    avroUserSerde.configure(serdeConfig, false);
-	    avroColorSerde.configure(serdeConfig, false);
-
-	    // Define input and output topics to use in tests
-	    usersTopic = testDriver.createInputTopic(
-	        "user-topic",
-	        stringSerde.serializer(),
-	        avroUserSerde.serializer());
-	    colorsTopic = testDriver.createOutputTopic(
-	        "color-topic",
-	        stringSerde.deserializer(),
-	        avroColorSerde.deserializer());
-	  }
-
-	  @AfterEach
-	  void afterEach() {
-//	    testDriver.close();
-//	    MockSchemaRegistry.dropScope(SCHEMA_REGISTRY_SCOPE);
-	  }
-
-	  @Test
-	  void shouldPropagateUserWithFavoriteColorRed() throws Exception {
-	    User user = new User("Alice", 7, "red");
-	   
-	    usersTopic.pipeInput("Alice", user);
-	    assertEquals(new Color("red"), colorsTopic.readValue());
-	  }
+//	  private static final String SCHEMA_REGISTRY_SCOPE = TopologyTestDriverAvroApplicationTests.class.getName();
+//	  private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
+//
+//	  private TopologyTestDriver testDriver;
+//
+//	  private TestInputTopic<String, User> usersTopic;
+//	  private TestOutputTopic<String, Color> colorsTopic;
+//
+//	  @BeforeEach
+//	  void beforeEach() throws Exception {
+//	    // Create topology to handle stream of users
+//	    StreamsBuilder builder = new StreamsBuilder();
+//	    new KafkaStreamApplication().handleStream(builder);
+//	    Topology topology = builder.build();
+//
+//	    // Dummy properties needed for test diver
+//	    Properties props = new Properties();
+//	    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
+//	    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
+//	    props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, StringSerde.class);
+//	    props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde.class);
+//	    props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_SCHEMA_REGISTRY_URL);
+//
+//	    // Create test driver
+//	    TopologyTestDriver testDriver = new TopologyTestDriver(topology, props);
+//
+//	    // Create Serdes used for test record keys and values
+//	    Serde<String> stringSerde = Serdes.String();
+//	    Serde<User> avroUserSerde = new SpecificAvroSerde<>();
+//	    Serde<Color> avroColorSerde = new SpecificAvroSerde<>();
+//
+//	    // Configure Serdes to use the same mock schema registry URL
+////	    Map<String, String> config = Map.of(
+////	        AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_SCHEMA_REGISTRY_URL);
+//	    Map<String, String> serdeConfig = new HashMap<>();
+//	    serdeConfig.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_SCHEMA_REGISTRY_URL);
+//	    avroUserSerde.configure(serdeConfig, false);
+//	    avroColorSerde.configure(serdeConfig, false);
+//
+//	    // Define input and output topics to use in tests
+//	    usersTopic = testDriver.createInputTopic(
+//	        "user-topic",
+//	        stringSerde.serializer(),
+//	        avroUserSerde.serializer());
+//	    colorsTopic = testDriver.createOutputTopic(
+//	        "color-topic",
+//	        stringSerde.deserializer(),
+//	        avroColorSerde.deserializer());
+//	  }
+//
+//	  @AfterEach
+//	  void afterEach() {
+////	    testDriver.close();
+////	    MockSchemaRegistry.dropScope(SCHEMA_REGISTRY_SCOPE);
+//	  }
+//
+//	  @Test
+//	  void shouldPropagateUserWithFavoriteColorRed() throws Exception {
+//	    User user = new User("Alice", 7, "red");
+//	   
+//	    usersTopic.pipeInput("Alice", user);
+//	    assertEquals(new Color("red"), colorsTopic.readValue());
+//	  }
 
 //	  @Test
 //	  void shouldNotPropagateUserWithFavoriteColorBlue() throws Exception {
