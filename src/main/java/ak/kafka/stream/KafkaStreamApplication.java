@@ -23,14 +23,10 @@ public class KafkaStreamApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(KafkaStreamApplication.class, args);
-//		 User user = new User("Alice", 7, "red");
-		   
-		    //usersTopic.pipeInput("Alice", user);
 	}
 
 //	@Bean
 	public KStream<String, User> handleStream(StreamsBuilder builder) throws JsonProcessingException {
-
 		KStream<String, User> userStream = builder.stream("user-topic");
 		KStream<String, Color> colorStream = userStream
 				.filter((username, user) -> !"blue".equals(user.getFavoriteColor()))
