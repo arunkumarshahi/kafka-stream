@@ -47,7 +47,7 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 
 @Slf4j
 @Component
-public class StreamSerilization {
+public class AvroProtobufStreamSerde {
 	@Autowired
 	private Environment envProps;
 	protected Properties buildStreamsProperties(Environment envProps2) {
@@ -112,6 +112,7 @@ public class StreamSerilization {
 		// topic contains values in avro format
 		final KStream<Long, Movie> avroMovieStream = builder.stream(inputAvroTopicName,
 				Consumed.with(Long(), movieSpecificAvroSerde));
+		
 		avroMovieStream.foreach(new ForeachAction<Long, Movie>() {
 		    public void apply(Long key, Movie value) {
 		        log.info(key + ": " + value);

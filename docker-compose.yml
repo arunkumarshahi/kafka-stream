@@ -44,4 +44,8 @@ services:
     image: arunkumarshahi/kafka-stream
     ports:
       - "9000:9000"
+    depends_on:
+      - broker 
+      - schema-registry
+      
   

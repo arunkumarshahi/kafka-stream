@@ -1,12 +1,17 @@
 package ak.kafka.stream;
 
 import static io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
+import static java.lang.Integer.parseInt;
+import static java.lang.Short.parseShort;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.ForeachAction;
@@ -17,32 +22,46 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
-
-import ak.kafka.stream.avro.Color;
-import ak.kafka.stream.avro.Movie;
-import ak.kafka.stream.avro.MovieProtos;
-import ak.kafka.stream.avro.User;
-import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
-import io.confluent.kafka.streams.serdes.protobuf.KafkaProtobufSerde;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.kafka.annotation.EnableKafkaStreams;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-@SpringBootApplication
-@EnableKafkaStreams
+import ak.kafka.stream.avro.Color;
+import ak.kafka.stream.avro.User;
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
-public class KafkaStreamApplication {
+@Component
+@EnableKafkaStreams
+public class AvroColorFilter {
 	@Autowired
 	private Environment envProps;
-	public static void main(String[] args) {
-		SpringApplication.run(KafkaStreamApplication.class, args);
+	@Bean
+	private void createTopics() {
+		Map<String, Object> config = new HashMap<>();
+		log.info("envProps = {}", envProps);
+		config.put("bootstrap.servers", envProps.getProperty("bootstrap.servers"));
+		AdminClient client = AdminClient.create(config);
+
+		List<NewTopic> topics = new ArrayList<>();
+
+		topics.add(new NewTopic(envProps.getProperty("input.avro.users.topic.name"),
+				parseInt(envProps.getProperty("input.avro.users.topic.partitions")),
+				parseShort(envProps.getProperty("input.avro.users.topic.replication.factor"))));
+
+		topics.add(new NewTopic(envProps.getProperty("input.avro.colors.topic.name"),
+				parseInt(envProps.getProperty("input.avro.colors.topic.partitions")),
+				parseShort(envProps.getProperty("input.avro.colors.topic.replication.factor"))));
+
+		client.createTopics(topics);
+		client.close();
 	}
 
-	@Bean
-	public KStream<String, User> handleStream(StreamsBuilder builder) throws JsonProcessingException {
+	
+	public KStream<String, User> handleStream() throws JsonProcessingException {
+		final StreamsBuilder builder = new StreamsBuilder();
 		KStream<String, User> userStream = builder.stream("avro-users",Consumed.with(String(), userAvroSerde()));
 		userStream.foreach(new ForeachAction<String, User>() {
 			public void apply(String key, User value) {
@@ -55,20 +74,6 @@ public class KafkaStreamApplication {
 		
 		colorStream.to("avro-colors",Produced.with(String(), colorAvroSerde()));
 		
-//		final KStream<Long, Movie> avroMovieStream = builder.stream(inputAvroTopicName,
-//				Consumed.with(Long(), movieSpecificAvroSerde));
-//		
-//		avroMovieStream.foreach(new ForeachAction<Long, Movie>() {
-//		    public void apply(Long key, Movie value) {
-//		        log.info(key + ": " + value);
-//		    }
-//		 });
-//		// convert and write movie data in protobuf format
-//		avroMovieStream
-//				.map((key, avroMovie) -> new KeyValue<>(key,
-//						MovieProtos.Movie.newBuilder().setMovieId(avroMovie.getMovieId()).setTitle(avroMovie.getTitle())
-//								.setReleaseYear(avroMovie.getReleaseYear()).build()))
-//				.to(outProtoTopicName, Produced.with(Long(), movieProtoSerde));
 		return userStream;
 	}
 	

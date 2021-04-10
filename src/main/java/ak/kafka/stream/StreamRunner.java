@@ -48,7 +48,9 @@ import static org.apache.kafka.streams.StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_C
 //@EnableKafkaStreams
 public class StreamRunner implements ApplicationRunner {
 	@Autowired
-	private  StreamSerilization streamSerilization;
+	private  AvroProtobufStreamSerde streamSerilization;
+	@Autowired
+	private AvroColorFilter avroColorFilter;
 //	private final static String inputTopic = "inputTopic";
 //	private final static String bootstrapServers = "localhost:9092";
 //
@@ -56,19 +58,10 @@ public class StreamRunner implements ApplicationRunner {
 	public void run(ApplicationArguments arg0) throws Exception {
 		//transformBasicStream();
 		log.info("StreamRunner is invoked ");
-		streamSerilization.runTutorial("C:\\DockerTutorial\\spring\\kafka-stream\\src\\main\\resources\\application.properties");
-		//transformNestedObjectStream(StreamsBuilder builder);
+		streamSerilization.runTutorial("");
+		avroColorFilter.handleStream();
 }
-//	private void transformNestedObjectStream() {
-//		final StreamsBuilder builder = new StreamsBuilder();
-//		log.info("stream invoked ");
-//		KStream<String, User> userStream = builder.stream("user-topic");
-//		KStream<String, Color> colorStream = userStream
-//				.filter((username, user) -> !"blue".equals(user.getFavoriteColor()))
-//				.mapValues((username, user) -> new Color(user.getFavoriteColor()));
-//		colorStream.to("color-topic");
-//		
-//	}
+
 	private void transformBasicStream() {
 		final StreamsBuilder builder = new StreamsBuilder();
 
