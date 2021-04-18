@@ -29,6 +29,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import ak.kafka.stream.avro.Color;
 import ak.kafka.stream.avro.User;
 
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Pattern;
 
@@ -64,23 +67,38 @@ public class StreamRunner implements ApplicationRunner {
 		// transformBasicStream();
 		log.info("StreamRunner is invoked ");
 		// streamSerilization.runTutorial("");
-		avroColorFilter.avoroUserProducer();
-		avroColorFilter.handleStream();
-//		final CountDownLatch latch = new CountDownLatch(1);
-//		Runtime.getRuntime().addShutdownHook(new Thread("streams-shutdown-hook") {
-//			@Override
-//			public void run() {
-//				streams.close();
-//				latch.countDown();
-//			}
-//		});
-//		try {
-//			streams.start();
-//			latch.await();
-//		} catch (Throwable e) {
-//			System.exit(1);
-//		}
-//		System.exit(0);
+		CompletableFuture.runAsync(() -> avroColorFilter.avoroUserProducer());
+		CompletableFuture.runAsync(() -> executeFilterStream());
+
+	}
+
+	private void executeFilterStream() {
+		log.info("executeFilterStream job started");
+		Topology filterTopology = null;
+		try {
+			filterTopology = avroColorFilter.handleStream();
+		} catch (JsonProcessingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		Properties propertiess = avroColorFilter.buildStreamsProperties();
+		final KafkaStreams filterStreams = new KafkaStreams(filterTopology, propertiess);
+		final CountDownLatch latch = new CountDownLatch(1);
+		Runtime.getRuntime().addShutdownHook(new Thread("streams-shutdown-hook") {
+			@Override
+			public void run() {
+				filterStreams.close();
+				latch.countDown();
+			}
+		});
+		try {
+			filterStreams.start();
+			latch.await();
+		} catch (Throwable e) {
+			System.exit(1);
+		}
+		System.exit(0);
+
 	}
 
 	private void transformBasicStream() {

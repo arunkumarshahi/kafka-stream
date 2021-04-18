@@ -18,11 +18,15 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.ForeachAction;
+import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +44,10 @@ import ak.kafka.stream.avro.User;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 
 @Slf4j
 @Component
@@ -65,13 +73,36 @@ public class AvroColorFilter {
 				parseInt(envProps.getProperty("input.avro.colors.topic.partitions")),
 				parseShort(envProps.getProperty("input.avro.colors.topic.replication.factor"))));
 
+		topics.add(new NewTopic(envProps.getProperty("input.avro.sum.topic.name"),
+				parseInt(envProps.getProperty("input.avro.colors.topic.partitions")),
+				parseShort(envProps.getProperty("input.avro.colors.topic.replication.factor"))));
+
 		client.createTopics(topics);
 		client.close();
 	}
 
-	public KStream<String, User> handleStream() throws JsonProcessingException {
+	public Topology handleStream() throws JsonProcessingException {
 		final StreamsBuilder builder = new StreamsBuilder();
 		KStream<String, User> userStream = builder.stream("avro-users", Consumed.with(String(), userAvroSerde()));
+		log.info("sum stream   called ");
+		// adding aggregation of amount for a key
+		KStream<String, Integer> sumStream=userStream.map((k, v) -> new KeyValue<>((String)v.getName(), (Integer)v.getFavoriteNumber()))
+				// Group by title
+				.groupByKey(Grouped.with(Serdes.String(), Serdes.Integer()))
+				// Apply SUM aggregation
+				.reduce(Integer::sum)
+				// Write to stream specified by outputTopic
+				.toStream();
+				
+		
+		sumStream.foreach(new ForeachAction<String, Integer>() {
+			public void apply(String key, Integer value) {
+				log.info("sum stream   = " + key + ": " + value);
+			}
+		});
+		sumStream.to(envProps.getProperty("input.avro.sum.topic.name"),
+				Produced.with(Serdes.String(), Serdes.Integer()));
+		// end of aggregation
 		userStream.foreach(new ForeachAction<String, User>() {
 			public void apply(String key, User value) {
 				log.info(key + ": " + value);
@@ -87,7 +118,8 @@ public class AvroColorFilter {
 		});
 		colorStream.to("avro-colors", Produced.with(String(), colorAvroSerde()));
 		// final KafkaStreams streams = new KafkaStreams(topology, props);
-		return userStream;
+		final Topology topology = builder.build();
+		return topology;
 	}
 
 	protected SpecificAvroSerde<User> userAvroSerde() {
@@ -122,42 +154,42 @@ public class AvroColorFilter {
 	}
 
 	public void avoroUserProducer() {
+		log.info("avoroUserProducer job started");
 		Properties streamProps = this.buildStreamsProperties();
 		streamProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
 				org.apache.kafka.common.serialization.StringSerializer.class);
 		streamProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
 				io.confluent.kafka.serializers.KafkaAvroSerializer.class);
 		log.info("avoroUserProducer is called ");
-		KafkaProducer<String, User> producer = new KafkaProducer<String, User>(streamProps);
 		String keys[] = new String[] { "arun", "julie", "Sanvi", "Shravya" };
+		KafkaProducer producer = new KafkaProducer(streamProps);
 		while (true) {
 			try {
-				Thread.sleep(0 * 1000);
-
-				for (String key : keys) {
-					User user = new User();
-					user.setName(key);
-					Random random = new Random();
-					int value = random.nextInt(900) + 100;
-					user.setFavoriteNumber(value);
-					user.setFavoriteColor("RED");
-					log.info("avoroUserProducer is sending data  ={}",user);
-					ProducerRecord<String, User> record = new ProducerRecord<>(
-							envProps.getProperty("input.avro.users.topic.name"), key, user);
-
-					producer.send(record);
-				}
-			} catch (SerializationException | InterruptedException e1) {
-				// may need to do something with it
+				Thread.sleep(10 * 1000);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+			for (String key : keys) {
+				User user = new User();
+				user.setName(key);
+				Random random = new Random();
+				int value = random.nextInt(900) + 100;
+				user.setFavoriteNumber(value);
+				user.setFavoriteColor("BLACK");
+				log.info("avoroUserProducer is sending data  ={}", user);
+
+				ProducerRecord<String, User> record = new ProducerRecord<>(
+						envProps.getProperty("input.avro.users.topic.name"), key, user);
+				try {
+					producer.send(record);
+				} catch (SerializationException e) {
+					// may need to do something with it
+				}
+
+			}
 		}
+
 	}
-	// When you're finished producing records, you can flush the producer to ensure
-	// it has all been written to Kafka and
-	// then close the producer to free its resources.
-//		finally {
-//		  producer.flush();
-//		  producer.close();
-//		}
+
 }

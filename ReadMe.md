@@ -32,8 +32,10 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic avro
 docker exec -i schema-registry /usr/bin/kafka-avro-console-consumer --bootstrap-server broker:9092 --topic avro-colors --from-beginning
 
 
-
+docker exec -i schema-registry /usr/bin/kafka-console-consumer --bootstrap-server broker:9092 --topic avro-colors --from-beginning
 {"name":"arun","favorite_number":9,"favorite_color":"RED"}
 {"name":"xarun","favorite_number":9,"favorite_color":"blue"}
+
+docker exec -it broker /usr/bin/kafka-console-consumer --topic avro-sum --bootstrap-server broker:9092 --from-beginning --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.IntegerDeserializer
  
  
