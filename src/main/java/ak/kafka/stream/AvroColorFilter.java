@@ -129,30 +129,31 @@ public class AvroColorFilter {
 
 		KafkaProducer<String, User> producer = new KafkaProducer<String, User>(streamProps);
 		String keys[] = new String[] { "arun", "julie", "Sanvi", "Shravya" };
-		while(true) {
+		while (true) {
 			try {
-				Thread.sleep(10*1000);
-			
-		for (String key : keys) {
-			User user = new User();
-			user.setName(key);
-			Random random = new Random();
-			int value = random.nextInt(900) + 100;
-			user.setFavoriteNumber(value);
-			ProducerRecord<String, User> record = new ProducerRecord<>(
-					envProps.getProperty("input.avro.users.topic.name"), key, user);
-			
-				producer.send(record);
-			} }catch (SerializationException  | InterruptedException e1) {
+				Thread.sleep(10 * 1000);
+
+				for (String key : keys) {
+					User user = new User();
+					user.setName(key);
+					Random random = new Random();
+					int value = random.nextInt(900) + 100;
+					user.setFavoriteNumber(value);
+					ProducerRecord<String, User> record = new ProducerRecord<>(
+							envProps.getProperty("input.avro.users.topic.name"), key, user);
+
+					producer.send(record);
+				}
+			} catch (SerializationException | InterruptedException e1) {
 				// may need to do something with it
 			}
-		}}
-		// When you're finished producing records, you can flush the producer to ensure
-		// it has all been written to Kafka and
-		// then close the producer to free its resources.
+		}
+	}
+	// When you're finished producing records, you can flush the producer to ensure
+	// it has all been written to Kafka and
+	// then close the producer to free its resources.
 //		finally {
 //		  producer.flush();
 //		  producer.close();
 //		}
-	}
 }
