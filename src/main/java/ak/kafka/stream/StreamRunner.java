@@ -66,6 +66,21 @@ public class StreamRunner implements ApplicationRunner {
 		// streamSerilization.runTutorial("");
 		avroColorFilter.avoroUserProducer();
 		avroColorFilter.handleStream();
+//		final CountDownLatch latch = new CountDownLatch(1);
+//		Runtime.getRuntime().addShutdownHook(new Thread("streams-shutdown-hook") {
+//			@Override
+//			public void run() {
+//				streams.close();
+//				latch.countDown();
+//			}
+//		});
+//		try {
+//			streams.start();
+//			latch.await();
+//		} catch (Throwable e) {
+//			System.exit(1);
+//		}
+//		System.exit(0);
 	}
 
 	private void transformBasicStream() {

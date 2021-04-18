@@ -18,6 +18,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -42,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@EnableKafkaStreams
+//@EnableKafkaStreams
 public class AvroColorFilter {
 	@Autowired
 	private Environment envProps;
@@ -85,7 +86,7 @@ public class AvroColorFilter {
 			}
 		});
 		colorStream.to("avro-colors", Produced.with(String(), colorAvroSerde()));
-
+		// final KafkaStreams streams = new KafkaStreams(topology, props);
 		return userStream;
 	}
 
@@ -126,12 +127,12 @@ public class AvroColorFilter {
 				org.apache.kafka.common.serialization.StringSerializer.class);
 		streamProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
 				io.confluent.kafka.serializers.KafkaAvroSerializer.class);
-
+		log.info("avoroUserProducer is called ");
 		KafkaProducer<String, User> producer = new KafkaProducer<String, User>(streamProps);
 		String keys[] = new String[] { "arun", "julie", "Sanvi", "Shravya" };
 		while (true) {
 			try {
-				Thread.sleep(10 * 1000);
+				Thread.sleep(0 * 1000);
 
 				for (String key : keys) {
 					User user = new User();
@@ -139,6 +140,8 @@ public class AvroColorFilter {
 					Random random = new Random();
 					int value = random.nextInt(900) + 100;
 					user.setFavoriteNumber(value);
+					user.setFavoriteColor("RED");
+					log.info("avoroUserProducer is sending data  ={}",user);
 					ProducerRecord<String, User> record = new ProducerRecord<>(
 							envProps.getProperty("input.avro.users.topic.name"), key, user);
 
@@ -146,6 +149,7 @@ public class AvroColorFilter {
 				}
 			} catch (SerializationException | InterruptedException e1) {
 				// may need to do something with it
+				e1.printStackTrace();
 			}
 		}
 	}

@@ -20,7 +20,7 @@ import org.springframework.core.env.Environment;
 
 import ak.kafka.stream.avro.Color;
 import ak.kafka.stream.avro.Movie;
-import ak.kafka.stream.avro.MovieProtos;
+//import ak.kafka.stream.avro.MovieProtos;
 import ak.kafka.stream.avro.User;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import io.confluent.kafka.streams.serdes.protobuf.KafkaProtobufSerde;
@@ -32,7 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootApplication
-@EnableKafkaStreams
+//@EnableKafkaStreams
 @Slf4j
 public class KafkaStreamApplication {
 	@Autowired
