@@ -41,52 +41,42 @@ public class KafkaStreamApplication {
 		SpringApplication.run(KafkaStreamApplication.class, args);
 	}
 
-	@Bean
-	public KStream<String, User> handleStream(StreamsBuilder builder) throws JsonProcessingException {
-		KStream<String, User> userStream = builder.stream("avro-users",Consumed.with(String(), userAvroSerde()));
-		userStream.foreach(new ForeachAction<String, User>() {
-			public void apply(String key, User value) {
-				log.info(key + ": " + value);
-			}
-		});
-		KStream<String, Color> colorStream = userStream
-				.filter((username, user) -> !"blue".equals(user.getFavoriteColor()))
-				.mapValues((username, user) -> new Color(user.getFavoriteColor()));
-		
-		colorStream.to("avro-colors",Produced.with(String(), colorAvroSerde()));
-		
-//		final KStream<Long, Movie> avroMovieStream = builder.stream(inputAvroTopicName,
-//				Consumed.with(Long(), movieSpecificAvroSerde));
+//	@Bean
+//	public KStream<String, User> handleStream(StreamsBuilder builder) throws JsonProcessingException {
+//		KStream<String, User> userStream = builder.stream("avro-users",Consumed.with(String(), userAvroSerde()));
+//		userStream.foreach(new ForeachAction<String, User>() {
+//			public void apply(String key, User value) {
+//				log.info(key + ": " + value);
+//			}
+//		});
+//		KStream<String, Color> colorStream = userStream
+//				.filter((username, user) -> !"blue".equals(user.getFavoriteColor()))
+//				.mapValues((username, user) -> new Color(user.getFavoriteColor()));
 //		
-//		avroMovieStream.foreach(new ForeachAction<Long, Movie>() {
-//		    public void apply(Long key, Movie value) {
-//		        log.info(key + ": " + value);
-//		    }
-//		 });
-//		// convert and write movie data in protobuf format
-//		avroMovieStream
-//				.map((key, avroMovie) -> new KeyValue<>(key,
-//						MovieProtos.Movie.newBuilder().setMovieId(avroMovie.getMovieId()).setTitle(avroMovie.getTitle())
-//								.setReleaseYear(avroMovie.getReleaseYear()).build()))
-//				.to(outProtoTopicName, Produced.with(Long(), movieProtoSerde));
-		return userStream;
-	}
-	
-	protected SpecificAvroSerde<User> userAvroSerde() {
-		SpecificAvroSerde<User> movieAvroSerde = new SpecificAvroSerde<>();
-
-		Map<String, String> serdeConfig = new HashMap<>();
-		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps.getProperty("schema.registry.url"));
-		movieAvroSerde.configure(serdeConfig, false);
-		return movieAvroSerde;
-	}
-
-	protected SpecificAvroSerde<Color> colorAvroSerde() {
-		SpecificAvroSerde<Color> movieAvroSerde = new SpecificAvroSerde<>();
-
-		Map<String, String> serdeConfig = new HashMap<>();
-		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps.getProperty("schema.registry.url"));
-		movieAvroSerde.configure(serdeConfig, false);
-		return movieAvroSerde;
-	}
+//		colorStream.to("avro-colors",Produced.with(String(), colorAvroSerde()));
+//		colorStream.foreach(new ForeachAction<String, Color>() {
+//			public void apply(String key, Color value) {
+//				log.info("filtered color  = " + key + ": " + value);
+//			}
+//		});
+//		return userStream;
+//	}
+//	
+//	protected SpecificAvroSerde<User> userAvroSerde() {
+//		SpecificAvroSerde<User> movieAvroSerde = new SpecificAvroSerde<>();
+//
+//		Map<String, String> serdeConfig = new HashMap<>();
+//		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps.getProperty("schema.registry.url"));
+//		movieAvroSerde.configure(serdeConfig, false);
+//		return movieAvroSerde;
+//	}
+//
+//	protected SpecificAvroSerde<Color> colorAvroSerde() {
+//		SpecificAvroSerde<Color> movieAvroSerde = new SpecificAvroSerde<>();
+//
+//		Map<String, String> serdeConfig = new HashMap<>();
+//		serdeConfig.put(SCHEMA_REGISTRY_URL_CONFIG, envProps.getProperty("schema.registry.url"));
+//		movieAvroSerde.configure(serdeConfig, false);
+//		return movieAvroSerde;
+//	}
 }

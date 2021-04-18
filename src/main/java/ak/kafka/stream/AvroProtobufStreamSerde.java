@@ -2,6 +2,10 @@ package ak.kafka.stream;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import ak.kafka.stream.avro.Movie;
 import ak.kafka.stream.avro.MovieProtos;
+import ak.kafka.stream.avro.User;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import io.confluent.kafka.streams.serdes.protobuf.KafkaProtobufSerde;
@@ -31,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 //import io.confluent.developer.avro.Movie;
@@ -50,6 +56,7 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 public class AvroProtobufStreamSerde {
 	@Autowired
 	private Environment envProps;
+
 	protected Properties buildStreamsProperties(Environment envProps2) {
 		Properties props = new Properties();
 
@@ -112,12 +119,12 @@ public class AvroProtobufStreamSerde {
 		// topic contains values in avro format
 		final KStream<Long, Movie> avroMovieStream = builder.stream(inputAvroTopicName,
 				Consumed.with(Long(), movieSpecificAvroSerde));
-		
+
 		avroMovieStream.foreach(new ForeachAction<Long, Movie>() {
-		    public void apply(Long key, Movie value) {
-		        log.info(key + ": " + value);
-		    }
-		 });
+			public void apply(Long key, Movie value) {
+				log.info(key + ": " + value);
+			}
+		});
 		// convert and write movie data in protobuf format
 		avroMovieStream
 				.map((key, avroMovie) -> new KeyValue<>(key,
@@ -139,11 +146,11 @@ public class AvroProtobufStreamSerde {
 	}
 
 	protected void runTutorial(String configPath) throws IOException {
-        log.info("runTutorial invoked in stream runner");
-		//Properties envProps = this.loadEnvProperties(configPath);
+		log.info("runTutorial invoked in stream runner");
+		// Properties envProps = this.loadEnvProperties(configPath);
 		Properties streamProps = this.buildStreamsProperties(envProps);
-		log.info("envProps invoked in stream runner :: {}",envProps);
-		log.info("streamProps invoked in stream runner :: {}",streamProps);
+		log.info("envProps invoked in stream runner :: {}", envProps);
+		log.info("streamProps invoked in stream runner :: {}", streamProps);
 		Topology topology = this.buildTopology(envProps, this.movieAvroSerde(envProps),
 				this.movieProtobufSerde(envProps));
 		this.createTopics(envProps);
@@ -170,11 +177,5 @@ public class AvroProtobufStreamSerde {
 		System.exit(0);
 	}
 
-//	public static void main(String[] args) throws IOException {
-//		if (args.length < 1) {
-//			throw new IllegalArgumentException(
-//					"This program takes one argument: the path to an environment configuration file.");
-//		}
-//
-//	}
+	
 }

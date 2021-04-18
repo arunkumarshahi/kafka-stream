@@ -54,16 +54,18 @@ public class StreamRunner implements ApplicationRunner {
 	private AvroProtobufStreamSerde streamSerilization;
 	@Autowired
 	private AvroColorFilter avroColorFilter;
+
 //	private final static String inputTopic = "inputTopic";
 //	private final static String bootstrapServers = "localhost:9092";
 //
 	@Override
 	public void run(ApplicationArguments arg0) throws Exception {
-		favColorCount();
+		// favColorCount();
 		// transformBasicStream();
 		log.info("StreamRunner is invoked ");
 		// streamSerilization.runTutorial("");
-		// avroColorFilter.handleStream();
+		avroColorFilter.avoroUserProducer();
+		avroColorFilter.handleStream();
 	}
 
 	private void transformBasicStream() {
@@ -137,8 +139,8 @@ public class StreamRunner implements ApplicationRunner {
 				log.info("intermediate KStream Table calculated stream :: " + key + ": " + value);
 			}
 		});
-		KTable<String, Long> convertedTable = intermediateConvertedTable.groupBy((key, value) 
-				-> new KeyValue<>(value,value)).count();
+		KTable<String, Long> convertedTable = intermediateConvertedTable
+				.groupBy((key, value) -> new KeyValue<>(value, value)).count();
 		convertedTable.toStream().to("table-output-topic");
 		convertedTable.toStream().foreach(new ForeachAction<String, Long>() {
 			public void apply(String key, Long value) {
