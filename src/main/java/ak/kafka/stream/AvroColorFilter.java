@@ -110,7 +110,7 @@ public class AvroColorFilter {
 		});
 		KStream<String, Color> colorStream = userStream
 				.filter((username, user) -> !"blue".equals(user.getFavoriteColor()))
-				.mapValues((username, user) -> new Color(user.getFavoriteColor()));
+				.mapValues((username, user) -> new Color(user.getFavoriteNumber(),user.getFavoriteColor()));
 		colorStream.foreach(new ForeachAction<String, Color>() {
 			public void apply(String key, Color value) {
 				log.info("filtered color  = " + key + ": " + value);

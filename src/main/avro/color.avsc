@@ -2,6 +2,7 @@
  "type": "record",
  "name": "Color",
  "fields": [
+      {"name": "id",  "type":"int"},
      {"name": "name", "type": "string"}
     
  ]

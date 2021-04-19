@@ -36,6 +36,16 @@ docker exec -i schema-registry /usr/bin/kafka-console-consumer --bootstrap-serve
 {"name":"arun","favorite_number":9,"favorite_color":"RED"}
 {"name":"xarun","favorite_number":9,"favorite_color":"blue"}
 
+********** consummer for sum topic *********8
 docker exec -it broker /usr/bin/kafka-console-consumer --topic avro-sum --bootstrap-server broker:9092 --from-beginning --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.IntegerDeserializer
  
+********* run schema registry on window *********
+Someone has created Windows .bat files as Ewen Cheslack-Postava suggests
+
+https://github.com/renukaradhya/confluentplatform/tree/master/bin/windows
+
+I saved schema-registry-run-class.bat and schema-registry-start.bat into my \confluent\bin\windows directory and then was able to run Schema Registry with
+
+C:\confluent\bin\windows\schema-registry-start.bat C:\confluent\etc\
+schema-registry\schema-registry.properties 
  
